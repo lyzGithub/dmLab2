@@ -124,6 +124,7 @@ public class readFile{
 		for(int i=0; i<v1.length; i++){
 			dis += (v1[i]-v2[i])*(v1[i]-v2[i]);
 		}
+		
 		return Math.sqrt(dis);
 	}
 	private void sonarSVD(){
