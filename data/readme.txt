@@ -1,0 +1,2 @@
+Data Description and Format: In each binary training and testing dataset, each row represents an example with label. 
+Namely, the last column represents the label of the corresponding example, and the remaining columns represent the feature of the corresponding example.
