@@ -18,6 +18,7 @@ import org.jgraph.graph.DefaultEdge;
 import org.jgrapht.UndirectedGraph;
 import org.jgrapht.WeightedGraph;
 import org.jgrapht.alg.DijkstraShortestPath;
+import org.jgrapht.alg.FloydWarshallShortestPaths;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleGraph;
 import org.jgrapht.graph.SimpleWeightedGraph;
@@ -53,51 +54,52 @@ public class readFile{
 		buildMatrix(sonarTestPath);
 		buildMatrix(spliceTrainPath);
 		buildMatrix(spliceTestPath);
+		double startTime = 0;
+		double endTime = 0;
 		//System.out.println(sonarTrainMatrix);
 		System.out.println("~~~~~~~~~~~~~~~~~~~~~sonar PCA~~~~~~~~~~~~~~~~~~~~~");
-		sonarPCA();
+		startTime = System.currentTimeMillis();
+		//sonarPCA();
+		endTime = System.currentTimeMillis();
+		System.out.println("Time spend for sonar PCA: " +(endTime- startTime)+" ms.");
+		
 		System.out.println("\n\n~~~~~~~~~~~~~~~~~~~~~splice PCA~~~~~~~~~~~~~~~~~~~~~");
-		splicePCA();
+		startTime = System.currentTimeMillis();
+		//splicePCA();
+		endTime = System.currentTimeMillis();
+		System.out.println("Time spend for splice PCA: " +(endTime- startTime)+" ms.");
+		
 		System.out.println("\n\n~~~~~~~~~~~~~~~~~~~~~sonar SVD~~~~~~~~~~~~~~~~~~~~~");
-		sonarSVD();
+		startTime = System.currentTimeMillis();
+		//sonarSVD();
+		endTime = System.currentTimeMillis();
+		System.out.println("Time spend for sonar SVD: " +(endTime- startTime)+" ms.");
+		
 		System.out.println("\n\n~~~~~~~~~~~~~~~~~~~~~splice SVD~~~~~~~~~~~~~~~~~~~~~");
-		spliceSVD();
+		startTime = System.currentTimeMillis();
+		//spliceSVD();
+		endTime = System.currentTimeMillis();
+		System.out.println("Time spend for splice SVD: " +(endTime- startTime)+" ms.");
+		
 		System.out.println("\n\n~~~~~~~~~~~~~~~~~~~~~sonar ISOMAP~~~~~~~~~~~~~~~~~~~~~");
+		startTime = System.currentTimeMillis();
 		sonarISOMAP();
+		endTime = System.currentTimeMillis();
+		System.out.println("Time spend for sonar ISOMAP: " +(endTime- startTime)+" ms.");
+		
 		System.out.println("\n\n~~~~~~~~~~~~~~~~~~~~~splice ISOMAP~~~~~~~~~~~~~~~~~~~~~");
+		startTime = System.currentTimeMillis();
 		spliceISOMAP();
+		endTime = System.currentTimeMillis();
+		System.out.println("Time spend for splice ISOMAP: " +(endTime- startTime)+" ms.");
 		
 	}
 	
-	private void spliceISOMAP(){
-		Array2DRowRealMatrix matrixSonarTrain = spliceTrainMatrix;
-		Array2DRowRealMatrix matrixSonarTest = spliceTestMatrix;
-		//build weighted graph
-		int k = 4;
-		
-		HashMap<Integer,List<double[]>> weigtedTrainGraph = returnISOMAPKnnWeightedGraph(k, matrixSonarTrain,allLineSpliceTrain);
-		HashMap<Integer,List<double[]>> weigtedTestGraph = returnISOMAPKnnWeightedGraph(k, matrixSonarTest,allLineSpliceTest);
-		for(int km=10; km<=30; km+=10){
-			//System.out.println("km:"+km);
-			Array2DRowRealMatrix XkTrain = comISOMAPXnm(weigtedTrainGraph,k,km,allLineSpliceTrain);
-			Array2DRowRealMatrix XkTest = comISOMAPXnm(weigtedTestGraph,k,km,allLineSpliceTest);	
-			String []predicLabel = predictLabelISOMAP(XkTrain,XkTest,allLineSpliceTest,spliceTrainLabel);
-			int hitNum = 0;
-			for(int i=0; i<allLineSpliceTest; i++){
-				//System.out.println(labelSplicePredict[i] +" "+ SpliceTestLabel[i]);
-				if(predicLabel[i].equals(spliceTestLabel[i]) )
-					hitNum ++;
-			}
-			System.out.print("k's num: " +k );
-			System.out.println( ", allLineSpliceTest:"+ allLineSpliceTest+", hitNum: "+hitNum 
-					+ ", hitRate:  "+(double)(hitNum)/(double)allLineSpliceTest);
-		}
-	}
 	private void sonarISOMAP(){
 		Array2DRowRealMatrix matrixSonarTrain = sonarTrainMatrix;
 		Array2DRowRealMatrix matrixSonarTest = sonarTestMatrix;
 		//build weighted graph
-		int k = 4;
+		int k = 6;
 		
 		HashMap<Integer,List<double[]>> weigtedTrainGraph = returnISOMAPKnnWeightedGraph(k, matrixSonarTrain,allLineSonarTrain);
 		HashMap<Integer,List<double[]>> weigtedTestGraph = returnISOMAPKnnWeightedGraph(k, matrixSonarTest,allLineSonarTest);
@@ -112,14 +114,39 @@ public class readFile{
 				if(predicLabel[i].equals(sonarTestLabel[i]) )
 					hitNum ++;
 			}
-			System.out.print("k's num: " +k );
+			System.out.print("km's num: " +km );
 			System.out.println( ", allLineSonarTest:"+ allLineSonarTest+", hitNum: "+hitNum 
 					+ ", hitRate:  "+(double)(hitNum)/(double)allLineSonarTest);
 			
 		}
 	}
-	
+	private void spliceISOMAP(){
+		Array2DRowRealMatrix matrixSonarTrain = spliceTrainMatrix;
+		Array2DRowRealMatrix matrixSonarTest = spliceTestMatrix;
+		//build weighted graph
+		int k = 5;
+		HashMap<Integer,List<double[]>> weigtedTrainGraph = returnISOMAPKnnWeightedGraph(k, matrixSonarTrain,allLineSpliceTrain);
+		HashMap<Integer,List<double[]>> weigtedTestGraph = returnISOMAPKnnWeightedGraph(k, matrixSonarTest,allLineSpliceTest);
+		for(int km=10; km<=30; km+=10){
+			//System.out.println("km:"+km);
+			System.out.println("compute weight XkTrain!");
+			Array2DRowRealMatrix XkTrain = comISOMAPXnm(weigtedTrainGraph,k,km,allLineSpliceTrain);
+			System.out.println("compute weight XkTest!");
+			Array2DRowRealMatrix XkTest = comISOMAPXnm(weigtedTestGraph,k,km,allLineSpliceTest);
+			String []predicLabel = predictLabelISOMAP(XkTrain,XkTest,allLineSpliceTest,spliceTrainLabel);
+			int hitNum = 0;
+			for(int i=0; i<allLineSpliceTest; i++){
+				//System.out.println(labelSplicePredict[i] +" "+ SpliceTestLabel[i]);
+				if(predicLabel[i].equals(spliceTestLabel[i]) )
+					hitNum ++;
+			}
+			System.out.print("k's num: " +k );
+			System.out.println( ", allLineSpliceTest:"+ allLineSpliceTest+", hitNum: "+hitNum 
+					+ ", hitRate:  "+(double)(hitNum)/(double)allLineSpliceTest);
+		}
+	}
 	private String[] predictLabelISOMAP(Array2DRowRealMatrix testM, Array2DRowRealMatrix trainM,int allLine,String labelTrain[]){
+		
 		String []label = new String[allLine];
 		for(int i=0; i<allLine; i++){
 			double []vectorTest = testM.getRow(i);
@@ -144,8 +171,9 @@ public class readFile{
 		return label;
 	}
 	
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private Array2DRowRealMatrix comISOMAPXnm(HashMap<Integer,List<double[]>> weigtedGraph,int k,int km,int allLine){
-
+		//System.out.println("in comISOMAPXnm! " );
 		SimpleWeightedGraph<Integer,DefaultWeightedEdge> simWG = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
 		
 		Iterator iter = weigtedGraph.entrySet().iterator();
@@ -162,25 +190,33 @@ public class readFile{
 				simWG.setEdgeWeight(simWG.getEdge(key, (int)temp[0]), temp[1]);
 			}
 		}
-		Array2DRowRealMatrix disMatrixAll = new Array2DRowRealMatrix(new double[allLine][allLine]);
+		//System.out.println("build  disMatrixAll2 D2!" );
+		//System.out.println(allLine);
+		//Array2DRowRealMatrix disMatrixAll = new Array2DRowRealMatrix(new double[allLine][allLine]);
+		Array2DRowRealMatrix disMatrixAll2 = new Array2DRowRealMatrix(new double[allLine][allLine]);
+		FloydWarshallShortestPaths fwSP = new FloydWarshallShortestPaths(simWG);
 		for(int i=0; i<allLine; i++){
 			for(int j=0; j<allLine; j++){
 				if(i == j){
-					disMatrixAll.addToEntry(i, j, 0);
+					//disMatrixAll.addToEntry(i, j, 0);
+					disMatrixAll2.addToEntry(i, j, 0);
 					continue;
 				}
-				DijkstraShortestPath comDisItem = new DijkstraShortestPath(simWG, i, j);
-				double disValue = comDisItem.getPathLength();
-				//System.out.println("dis from"+i+" to "+j+" is "+disValue+".");
-				disMatrixAll.addToEntry(i, j, disValue*disValue);
+				//DijkstraShortestPath comDisItem = new DijkstraShortestPath(simWG, i, j);
+				//double disValue = comDisItem.getPathLength();
+				double disValue = fwSP.shortestDistance(i, j);
+				if(Double.isInfinite(disValue)){
+					System.out.println("Warning, do not connect!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+					System.exit(0);
+				}
+				//if(disValue != fwSP.shortestDistance(i, j))
+					//System.out.println("no!");
+				//disMatrixAll.addToEntry(i, j, disValue);
+				disMatrixAll2.addToEntry(i, j, disValue*disValue);
 			}
 		}
-		Array2DRowRealMatrix disMatrixAll2 = new Array2DRowRealMatrix(new double[allLine][allLine]);
-		for(int i=0; i<allLine; i++){
-			for(int j=0; j<allLine; j++){
-				disMatrixAll2.addToEntry(i, j, disMatrixAll.getEntry(i, j)*disMatrixAll.getEntry(i, j));
-			}
-		}
+		
+		//System.out.println("build  tempJ J!" );
 		Array2DRowRealMatrix tempJ = new Array2DRowRealMatrix(new double[allLine][allLine]);
 		for(int i =0 ;i<allLine; i++){
 			for(int j=0; j<allLine; j++){
@@ -192,9 +228,11 @@ public class readFile{
 				}
 			}
 		}
+		//System.out.println("build  tempB B!" );
 		//System.out.println("tempJ "+tempJ.multiply(disMatrixAll2));
 		Array2DRowRealMatrix tempB = (Array2DRowRealMatrix) ((tempJ.multiply(disMatrixAll2)).multiply(tempJ)).scalarMultiply(-(double)1/2);
 		//System.out.println("tempB "+tempB);
+		//System.out.println("build  solverEigen !" );
 		EigenDecomposition solverEigen = new EigenDecomposition(tempB);//V:eigenvector matrix, D:eigen values
 		//System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 		double []eigenValues = solverEigen.getRealEigenvalues();
@@ -230,20 +268,21 @@ public class readFile{
 				//System.out.println(i+" and "+j);
 				double tempDis = disVector(matrix.getRow(i),matrix.getRow(j));
 				//System.out.println("tempDis:"+tempDis);
+				double []relace = new double[2];
+				relace[0] = j;
+				relace[1] = tempDis;
 				for(int m =k-1; m>=0; m--){
-					if(tempDis< (minDis.get(m))[1] ){
-						double []newOne = new double[2];
-						newOne[0] = j;
-						newOne[1] = tempDis;
+					if(relace[1]< (minDis.get(m))[1] ){
+						double []tmt = minDis.get(m);
 						//System.out.println("tempDis:"+tempDis);
-						minDis.set(m, newOne);
-						break;
+						minDis.set(m, relace);
+						relace = tmt;
 					}
 					
 				}
 			}
-			/*
-			System.out.println("row "+i+"'s min: ");
+			
+			/*System.out.println("row "+i+"'s min: ");
 			for(int index =0; index<k; index ++){
 				System.out.println(" to "+(int)minDis.get(index)[0]+", dis"+minDis.get(index)[1]);
 			}*/
@@ -268,6 +307,9 @@ public class readFile{
 		}
 		return Math.sqrt(dis);
 	}
+	
+	
+	
 	private void sonarSVD(){
 		Array2DRowRealMatrix matrixATrain = sonarTrainMatrix;
 		Array2DRowRealMatrix matrixATest = sonarTestMatrix;
@@ -279,16 +321,16 @@ public class readFile{
 			//RealMatrix U =  svdSolver.getU();
 			/*
 			 * The Singular Value Decomposition of matrix A is a set of three matrices: U, ¦² and V such that A = U ¡Á ¦² ¡Á VT.
-			 *  Let A be a m ¡Á n matrix, then U is a m ¡Á p orthogonal matrix, 
+			 *  Let A be a n ¡Á m matrix, then U is a n ¡Á p orthogonal matrix, 
 			 *  ¦² is a p ¡Á p diagonal matrix with positive or null elements, 
-			 *  V is a p ¡Á n orthogonal matrix (hence VT is also orthogonal) where p=min(m,n).
+			 *  V is a p ¡Á m orthogonal matrix (hence VT is also orthogonal) where p=min(n,m).
 			 */
 			RealMatrix V =  svdSolver.getV();
-			System.out.println(V.getColumnDimension()+"  "+V.getRowDimension());
+			//System.out.println(V);
 			//System.out.println(U.getColumnDimension());
 			Array2DRowRealMatrix Uk = new Array2DRowRealMatrix(new double[dimSonarTrain][k]);
 			for(int i=0; i<k; i++){
-				Uk.setColumn(i, V.getRow(i) );
+				Uk.setColumn(i, V.getColumn(i) );
 			}
 			//Array2DRowRealMatrix UkT = (Array2DRowRealMatrix) Uk.transpose();
 			Array2DRowRealMatrix newCorMatrixTrain = matrixATrain.multiply(Uk);
@@ -348,11 +390,11 @@ public class readFile{
 			 *  V is a p ¡Á n orthogonal matrix (hence VT is also orthogonal) where p=min(m,n).
 			 */
 			RealMatrix V =  svdSolver.getV();
-			System.out.println(V.getColumnDimension()+"  "+V.getRowDimension());
+			//System.out.println(V.getColumnDimension()+"  "+V.getRowDimension());
 			//System.out.println(U.getColumnDimension());
 			Array2DRowRealMatrix Uk = new Array2DRowRealMatrix(new double[dimSpliceTrain][k]);
 			for(int i=0; i<k; i++){
-				Uk.setColumn(i, V.getRow(i) );
+				Uk.setColumn(i, V.getColumn(i) );
 			}
 			//Array2DRowRealMatrix UkT = (Array2DRowRealMatrix) Uk.transpose();
 			Array2DRowRealMatrix newCorMatrixTrain = matrixATrain.multiply(Uk);
@@ -395,6 +437,7 @@ public class readFile{
 		
 		return label;
 	}
+	
 	
 	
 	private void splicePCA(){
