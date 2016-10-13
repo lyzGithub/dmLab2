@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
+import org.apache.commons.math3.exception.ConvergenceException;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.EigenDecomposition;
 import org.apache.commons.math3.linear.RealMatrix;
@@ -83,7 +84,7 @@ public class readFile{
 		
 		System.out.println("\n\n~~~~~~~~~~~~~~~~~~~~~sonar ISOMAP~~~~~~~~~~~~~~~~~~~~~");
 		startTime = System.currentTimeMillis();
-		sonarISOMAP();
+		//sonarISOMAP();
 		endTime = System.currentTimeMillis();
 		System.out.println("Time spend for sonar ISOMAP: " +(endTime- startTime)+" ms.");
 		
@@ -124,7 +125,7 @@ public class readFile{
 		Array2DRowRealMatrix matrixSonarTrain = spliceTrainMatrix;
 		Array2DRowRealMatrix matrixSonarTest = spliceTestMatrix;
 		//build weighted graph
-		int k = 5;
+		int k = 10;
 		HashMap<Integer,List<double[]>> weigtedTrainGraph = returnISOMAPKnnWeightedGraph(k, matrixSonarTrain,allLineSpliceTrain);
 		HashMap<Integer,List<double[]>> weigtedTestGraph = returnISOMAPKnnWeightedGraph(k, matrixSonarTest,allLineSpliceTest);
 		for(int km=10; km<=30; km+=10){
@@ -228,24 +229,26 @@ public class readFile{
 				}
 			}
 		}
-		//System.out.println("build  tempB B!" );
+		//System.out.println(tempJ );
 		//System.out.println("tempJ "+tempJ.multiply(disMatrixAll2));
 		Array2DRowRealMatrix tempB = (Array2DRowRealMatrix) ((tempJ.multiply(disMatrixAll2)).multiply(tempJ)).scalarMultiply(-(double)1/2);
 		//System.out.println("tempB "+tempB);
-		//System.out.println("build  solverEigen !" );
-		EigenDecomposition solverEigen = new EigenDecomposition(tempB);//V:eigenvector matrix, D:eigen values
-		//System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+		System.out.println("building  solverEigen !" );
+		//System.out.println("tempB: "+tempB.getColumnDimension()+" "+ tempB.getRowDimension());
+		EigenDecomposition solverEigen = new EigenDecomposition(tempB);//V:eigenvector matrix, D:eigen values;
+		
+		System.out.println("eigen sovled~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 		double []eigenValues = solverEigen.getRealEigenvalues();
 		RealMatrix eigenVectorMatrix =  solverEigen.getV();
 		Array2DRowRealMatrix Enm = new Array2DRowRealMatrix(new double[allLine][km]);
-		Array2DRowRealMatrix Amm = new Array2DRowRealMatrix(new double[km][km]);
+		//Array2DRowRealMatrix Amm = new Array2DRowRealMatrix(new double[km][km]);
 		Array2DRowRealMatrix Amm5 = new Array2DRowRealMatrix(new double[km][km]);
 		for(int ki=0; ki<km; ki++){
 			Enm.setColumn(ki, eigenVectorMatrix.getColumn(ki));
-			Amm.setEntry(ki, ki, eigenValues[ki]);
+			//Amm.setEntry(ki, ki, eigenValues[ki]);
 			Amm5.setEntry(ki, ki, Math.sqrt(eigenValues[ki]));
 		}
-			
+		//System.out.println("AllLine:"+allLine+"k: "+k+"km: "+km+"\n"+Amm5);
 		Array2DRowRealMatrix Xkm = Enm.multiply(Amm5);
 		//System.out.println(Xkm);
 		
