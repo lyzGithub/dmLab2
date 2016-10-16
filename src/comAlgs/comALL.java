@@ -1,4 +1,4 @@
-package readFileToMatrix;
+package comAlgs;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -24,7 +24,7 @@ import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleGraph;
 import org.jgrapht.graph.SimpleWeightedGraph;
 
-public class readFile{
+public class comALL{
 	private String sonarTestPath = "data/data1/sonar-test.txt";
 	private String sonarTrainPath = "data/data1/sonar-train.txt";
 	private String spliceTestPath = "data/data2/splice-test.txt";
@@ -49,7 +49,7 @@ public class readFile{
 	private int dimSpliceTrain;
 	private int dimSpliceTest;
 	
-	public readFile() throws FileNotFoundException{
+	public comALL() throws FileNotFoundException{
 		//init
 		buildMatrix(sonarTrainPath);
 		buildMatrix(sonarTestPath);

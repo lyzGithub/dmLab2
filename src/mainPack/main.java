@@ -2,9 +2,10 @@ package mainPack;
 
 import java.io.FileNotFoundException;
 
+import comAlgs.comALL;;
 
 public class main{
 	public static void main(String args[]) throws FileNotFoundException{
-		readFileToMatrix.readFile rf = new readFileToMatrix.readFile();
+		comALL rf = new comALL();
 	}
 } 
